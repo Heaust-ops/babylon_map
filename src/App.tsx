@@ -10,6 +10,7 @@ function App() {
   const isCaptureDisabled = useCaptureFlag();
   const [isMapVisible, setIsMapVisible] = useState(true);
   const { lng, lat, zoom, mapContainer } = useMap();
+  const [isFetching, setIsFetching] = useState(false);
 
   return (
     <div className={`${styles.app}`}>
@@ -18,17 +19,25 @@ function App() {
           Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
         </div>
         <button
-        style={{cursor: isCaptureDisabled ? "not-allowed" : "pointer"}}
-          disabled={isCaptureDisabled}
+          style={{
+            cursor: isFetching || isCaptureDisabled ? "not-allowed" : "pointer",
+          }}
+          disabled={isFetching || isCaptureDisabled}
           onClick={() => {
+            setIsFetching(true);
             MapboxService.image.bounds = [lng, lat, zoom];
             MapboxService.image.getBlobUrl().then(() => {
+              setIsFetching(false);
               setIsMapVisible(false);
             });
           }}
           className={`${styles.captureButton}`}
         >
-          {isCaptureDisabled ? "Loading..." : "Capture"}
+          {(() => {
+            if (isCaptureDisabled) return "Loading...";
+            if (isFetching) return "Capturing...";
+            return "Capture";
+          })()}
         </button>
         <div ref={mapContainer} className={`${styles.mapContainer}`} />
       </span>
